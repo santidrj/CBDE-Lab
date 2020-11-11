@@ -8,7 +8,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class MainLocal extends Configured implements Tool {
 
-    static String HADOOP_COMMON_PATH = "C:\\ ... \\src\\main\\resources\\winutils";
+    static String HADOOP_COMMON_PATH = "~/CBDE-Lab/MapReduce/resources/winutils";
 
     public int run(String[] args) throws Exception {
         Configuration conf = new Configuration();
@@ -38,7 +38,7 @@ public class MainLocal extends Configured implements Tool {
     }
 
 	public static void main(String[] args) throws Exception {
-        //System.setProperty("hadoop.home.dir", HADOOP_COMMON_PATH);
+        System.setProperty("hadoop.home.dir", HADOOP_COMMON_PATH);
 
         MainLocal driver = new MainLocal();
         int exitCode = ToolRunner.run(driver,args);
