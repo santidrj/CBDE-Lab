@@ -16,20 +16,15 @@ public class MainLocal extends Configured implements Tool {
 
         if (args[0].equals("-projection")) {
             Projection.configureJob(job, args[1], args[2]);
-        }
-        else if (args[0].equals("-aggregationSum")) {
-            AggregationSum.configureJob(job, args[1],args[2]);
-        }
-        else if (args[0].equals("-cartesian")) {
+        } else if (args[0].equals("-aggregationSum")) {
+            AggregationSum.configureJob(job, args[1], args[2]);
+        } else if (args[0].equals("-cartesian")) {
             CartesianProduct.configureJob(job, args[1], args[2]);
-        }
-        else if (args[0].equals("-selection")) {
+        } else if (args[0].equals("-selection")) {
             Selection.configureJob(job, args[1], args[2]);
-        }
-        else if (args[0].equals("-aggregationAvg")) {
+        } else if (args[0].equals("-aggregationAvg")) {
             AggregationAvg.configureJob(job, args[1], args[2]);
-        }
-        else if (args[0].equals("-projectionCSV")) {
+        } else if (args[0].equals("-projectionCSV")) {
             ProjectionCSV.configureJob(job, args[1], args[2]);
         }
 
@@ -37,12 +32,12 @@ public class MainLocal extends Configured implements Tool {
         return success ? 0 : 1;
     }
 
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         System.setProperty("hadoop.home.dir", HADOOP_COMMON_PATH);
 
         MainLocal driver = new MainLocal();
-        int exitCode = ToolRunner.run(driver,args);
+        int exitCode = ToolRunner.run(driver, args);
         System.exit(exitCode);
-	}
+    }
 
 }
