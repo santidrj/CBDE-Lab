@@ -26,6 +26,8 @@ public class MainLocal extends Configured implements Tool {
             AggregationAvg.configureJob(job, args[1], args[2]);
         } else if (args[0].equals("-projectionCSV")) {
             Projection.configureJob(job, args[1], args[2]);
+        } else if (args[0].equals("-join")) {
+            Join.configureJob(job, args[1], args[2]);
         }
 
         boolean success = job.waitForCompletion(true);
