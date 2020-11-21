@@ -1,11 +1,58 @@
 package cbde.labs.hbase_mapreduce;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
 public class AggregationAvg extends JobMapReduce {
+
+	public static class AggregationAvgMapper extends Mapper<Text, Text, Text, DoubleWritable> {
+		public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+			/*
+            Hacemos el fetch de los parametros del group by y de la agregación
+             */
+			String groupBy = context.getConfiguration().getStrings("groupBy")[0];
+			String agg = context.getConfiguration().getStrings("agg")[0];
+
+			/*
+            Separamos los campos del input, los quales sabemos que estan separados por comas .
+             */
+			String[] arrayValues = value.toString().split(",");
+
+			/*
+			Finalmente, obtenemos los valores y los escribimos.
+			 */
+			String groupByValue = Utils.getAttribute(arrayValues, groupBy);
+			double aggValue = Double.parseDouble(Utils.getAttribute(arrayValues, agg));
+			context.write(new Text(groupByValue), new DoubleWritable(aggValue));
+		}
+	}
+
+	public static class AggregationAvgReducer extends Reducer<Text, DoubleWritable, Text, DoubleWritable> {
+		public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
+			/*
+			Inicializamos el avg y un contador a 0, calculamos el para todos los valores de un mismo grupo la media
+			y la escribimos.
+			 */
+			double avg = 0;
+			int counter = 0;
+			for (DoubleWritable value : values) {
+				avg += value.get();
+				counter += 1;
+			}
+			avg /= counter;
+			context.write(key, new DoubleWritable(avg));
+		}
+	}
 
 	public AggregationAvg() {
 		this.input = null;
@@ -22,9 +69,37 @@ public class AggregationAvg extends JobMapReduce {
 	}
 
 	public static void configureJob(Job job, String pathIn, String pathOut) throws IOException, ClassNotFoundException, InterruptedException {
+		//Definimos el mapper y el tipo de las keys y los valores de salida, que en este caso son texto y double.
         job.setJarByClass(AggregationAvg.class);
+		job.setMapperClass(AggregationAvg.AggregationAvgMapper.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(DoubleWritable.class);
 
-        // Configure the rest of parameters required for this job
-        // Take a look at the provided examples: Projection, AggregationSum and CartesianProduct
+		/*
+		En este caso, si que necesitamos tanto combiner como reducer así que los definimos.
+		 */
+		job.setCombinerClass(AggregationAvg.AggregationAvgReducer.class);
+		job.setReducerClass(AggregationAvg.AggregationAvgReducer.class);
+
+		/*
+        Especificamos el formato de salida y de entrada del job.
+         */
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(DoubleWritable.class);
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+
+		/*
+        Especificamos los path de entraday salida de los ficheros.
+         */
+		FileInputFormat.addInputPath(job, new Path(pathIn));
+		FileOutputFormat.setOutputPath(job, new Path(pathOut));
+
+		/*
+        Finalmente le pasamos los parámetros necesarios al mapper, en este caso primero le pasamos los del group by,
+        en este caso el atributo type, y los valores a seleccionar, en este caso el atributo type y la agregacion.
+         */
+		job.getConfiguration().setStrings("groupBy", "type");
+		job.getConfiguration().setStrings("selection", "type");
+		job.getConfiguration().setStrings("agg", "col");
     }
 }
