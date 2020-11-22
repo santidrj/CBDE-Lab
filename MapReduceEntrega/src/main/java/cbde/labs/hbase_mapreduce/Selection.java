@@ -17,28 +17,21 @@ public class Selection extends JobMapReduce {
 
         public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             /*
-            Hacemos el fetch de los parametros del select y de la condición del where
+            Hacemos el fetch del tipo por el que queremos filtrar las filas.
              */
-            String[] selection = context.getConfiguration().getStrings("selection");
             String type = context.getConfiguration().getStrings("type")[0];
 
             /*
-            Separamos los campos del input, los quales sabemos que estan separados por comas .
+            Separamos los campos del input, los cuales sabemos que estan separados por comas.
              */
             String[] values = value.toString().split(",");
 
             /*
-            Comprobamos que el atributo type de la fila cumpla la condicion del select, y en caso afirmativo iteramos
-            sobre los valores y los escribimos en la salida.
+            Comprobamos que el atributo type de la fila cumpla la condicion del select, y en caso afirmativo
+            la escribimos en la salida.
              */
             if (Utils.getAttribute(values, "type").equals(type)) {
-                String selectionValue = Utils.getAttribute(values, selection[0]);
-                StringBuilder newValue = new StringBuilder(selectionValue);
-                for (int i = 1; i < selection.length; i++) {
-                    selectionValue = Utils.getAttribute(values, selection[i]);
-                    newValue.append("," + selectionValue);
-                }
-                context.write(key, new Text(newValue.toString()));
+                context.write(key, new Text(value.toString()));
             }
         }
     }
@@ -83,13 +76,9 @@ public class Selection extends JobMapReduce {
         FileOutputFormat.setOutputPath(job, new Path(pathOut));
 
         /*
-        Finalmente le pasamos los parámetros necesarios al mapper, en este caso primero le pasamos los parámetros a
-        seleccionar, en este caso todos los atributos de la table y posteriormente el atributo con el que queremos
-        hacer el where, en este caso el atributo type.
-         */
-        job.getConfiguration()
-            .setStrings("selection", "type", "region", "alc", "m_acid", "ash", "alc_ash", "mgn", "t_phenols", "flav",
-                "nonflav_phenols", "proant", "col", "hue", "od280od315", "proline");
+        Finalmente le pasamos los parámetros necesarios a la configuración, en este caso le pasamos el valor del
+        atributo con el que queremos hacer el where, en este caso el atributo type con valor type_1.
+        */
         job.getConfiguration().setStrings("type", "type_1");
     }
 }
